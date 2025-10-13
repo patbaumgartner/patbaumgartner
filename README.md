@@ -18,7 +18,7 @@ Driven by **curiosity, continuous improvement, and problem-solving**, I believe 
 
 ## 🎙️ Talks & Demos
 
-If you attended one of my talks or workshops, you can find the code here: 👉 [Browse talk repositories](https://github.com/patbaumgartner?tab=repositories&q=talk)
+If you attended one of my talks or workshops, you can find the code here: 👉 [Browse talk repositories](https://github.com/patbaumgartner?tab=repositories&q=talk+OR+deep)
 
 ---
 
