@@ -35,7 +35,7 @@ jobs:
           while True:
               url = (
                   f'https://api.github.com/users/patbaumgartner/repos'
-                  f'?per_page=100&sort=created&direction=asc&page={page}'
+                  f'?per_page=100&sort=created&direction=desc&page={page}'
               )
               req = urllib.request.Request(url, headers=headers)
               with urllib.request.urlopen(req) as resp:
@@ -154,7 +154,7 @@ jobs:
           while True:
               url = (
                   f'https://api.github.com/users/patbaumgartner/repos'
-                  f'?per_page=100&sort=created&direction=asc&page={page}'
+                  f'?per_page=100&sort=created&direction=desc&page={page}'
               )
               req = urllib.request.Request(url, headers=headers)
               with urllib.request.urlopen(req) as resp:
