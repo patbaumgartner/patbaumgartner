@@ -168,8 +168,7 @@ jobs:
       - name: Sync GitHub topics on talk and deep-dive repos
         # Requires a PAT (classic) with public_repo scope stored as TOPICS_TOKEN.
         # Create one at https://github.com/settings/tokens and add it as a repo secret.
-        # Step is silently skipped when the secret is absent.
-        if: ${{ secrets.TOPICS_TOKEN != '' }}
+        # Prints a WARN for each repo when the secret is absent; does not fail the job.
         env:
           GH_TOKEN: ${{ secrets.TOPICS_TOKEN }}
         run: |
