@@ -29,7 +29,7 @@ jobs:
           if token:
               headers['Authorization'] = f'token {token}'
 
-          # Fetch all repos, sorted by creation date ascending
+          # Fetch all repos, sorted by creation date descending
           repos = []
           page = 1
           while True:
@@ -60,13 +60,11 @@ jobs:
                           .title()
                   )
                   return title, ''
-              # Split on the first '. ' or '! ' to separate title from body
               for sep in ['! ', '. ']:
                   idx = desc.find(sep)
                   if idx != -1:
                       title = desc[:idx]
                       rest = desc[idx + len(sep):]
-                      # First sentence of remainder becomes the topics hint
                       for end in ['. ', '! ', '? ']:
                           end_idx = rest.find(end)
                           if end_idx != -1:
@@ -77,14 +75,75 @@ jobs:
                       return title, topics
               return desc, ''
 
+          # ── Conference extraction from commit messages ──────────────────────
+          _PREFIX = re.compile(
+              r'^(?:update(?:d|s)?(?:\s+slides?)?'
+              r'|initial\s+(?:commit|version)'
+              r'|first\s+version|adjusted)\s+(?:for\s+)?',
+              re.IGNORECASE,
+          )
+          _SUFFIX = re.compile(
+              r'\s+(?:updates?|edition|version|release)\s*$', re.IGNORECASE
+          )
+          _SKIP = re.compile(
+              r'^(?:initial\s+commit$|add\s+|chore:|fix:|feat:|merge\s+'
+              r'|update\s+readme|update\s+github|add\s+profile|bump\s+)',
+              re.IGNORECASE,
+          )
+
+          def extract_conference(message):
+              line = message.split('\n')[0].strip()
+              if _SKIP.match(line):
+                  return None
+              cleaned = _PREFIX.sub('', line).strip()
+              cleaned = re.sub(r'^for\s+', '', cleaned, flags=re.IGNORECASE).strip()
+              cleaned = _SUFFIX.sub('', cleaned).strip()
+              if not cleaned or len(cleaned) > 60:
+                  return None
+              # Full 4-digit year present → keep as-is
+              if re.search(r'\b20\d{2}\b', cleaned):
+                  return cleaned
+              # 2-digit year appended to name (e.g. JAX23, Heapcon23, W-JAX23)
+              m = re.search(r'([A-Za-z][\w\-\.\/]*?)(\d{2})$', cleaned)
+              if m and 20 <= int(m.group(2)) <= 30:
+                  return m.group(1).rstrip(' -') + ' 20' + m.group(2)
+              return None
+
+          def get_conferences(repo_name):
+              url = (
+                  f'https://api.github.com/repos/patbaumgartner/'
+                  f'{repo_name}/commits?per_page=50'
+              )
+              try:
+                  req = urllib.request.Request(url, headers=headers)
+                  with urllib.request.urlopen(req) as resp:
+                      commits = json.loads(resp.read())
+              except Exception as e:
+                  print(f'  WARN {repo_name} commits: {e}')
+                  return []
+              seen = {}
+              for c in commits:
+                  conf = extract_conference(c['commit']['message'])
+                  if conf:
+                      key = re.sub(r'\s+', '', conf).lower()
+                      seen.setdefault(key, conf)
+              # Sort by year, then alphabetically
+              def _year(s):
+                  m = re.search(r'20(\d{2})', s)
+                  return int(m.group(1)) if m else 0
+              return sorted(seen.values(), key=_year)
+
+          # ── Build table ─────────────────────────────────────────────────────
           rows = [
-              '| # | Talk / Deep Dive | Key Topics |',
-              '|---|-----------------|------------|',
+              '| # | Talk / Deep Dive | Key Topics | Presented at |',
+              '|---|-----------------|------------|--------------|',
           ]
           for i, r in enumerate(talks, 1):
               title, topics = parse_description(r.get('description') or '', r['name'])
               url = r['html_url']
-              rows.append(f'| {i} | [{title}]({url}) | {topics} |')
+              conferences = get_conferences(r['name'])
+              conf_str = ', '.join(conferences)
+              rows.append(f'| {i} | [{title}]({url}) | {topics} | {conf_str} |')
 
           table = '\n'.join(rows)
 
