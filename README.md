@@ -27,20 +27,20 @@ If you attended one of my talks or workshops, you can find the code below — mo
 <!-- TALKS_START -->
 | # | Talk / Deep Dive | Key Topics |
 |---|-----------------|------------|
-| 1 | [Stop Prompting, Start Planning — Agentic AI with Embabel](https://github.com/patbaumgartner/talk-stop-prompting-start-planning-with-embabel) | GOAP, agentic AI, Embabel, enterprise Java agents |
-| 2 | [Building Modular Monoliths in the Real World](https://github.com/patbaumgartner/talk-building-modular-monoliths-in-the-real-world) | Spring Modulith, modular architecture, domain-driven design |
-| 3 | [Buildpacks Unpacked: Custom AOT Caching](https://github.com/patbaumgartner/talk-buildpacks-unpacked-custom-aot-caching) | Paketo buildpacks, AOT caching, custom buildpack extensions |
-| 4 | [Spring Boot Observability in Practice](https://github.com/patbaumgartner/talk-spring-boot-observability-in-practice) | Micrometer, Prometheus, Grafana, OpenTelemetry, Kubernetes |
-| 5 | [Spring Boot in the Cloud: Advanced Optimization Deep Dive](https://github.com/patbaumgartner/deep-dive-spring-boot-in-the-cloud) | Memory reduction, startup time, Spring AOT, JVM tuning, hands-on workshop |
-| 6 | [Green Coding with Spring Boot](https://github.com/patbaumgartner/talk-green-coding-with-spring-boot) | Sustainable software, resource efficiency, cloud cost optimization |
-| 7 | [Demystifying Spring Boot Magic](https://github.com/patbaumgartner/talk-demystifying-spring-boot-magic) | Auto-configuration, @Conditional, custom Spring Boot starters |
-| 8 | [Understanding Buildpacks](https://github.com/patbaumgartner/talk-understanding-buildpacks) | Cloud Native Buildpacks, Paketo, lifecycle internals, CI/CD |
-| 9 | [Intelligent Applications with Spring AI](https://github.com/patbaumgartner/talk-intelligent-applications-with-spring-ai) | LLMs, Spring AI, chat, image generation, audio transcription |
-| 10 | [Soul Mates and Partners in Crime](https://github.com/patbaumgartner/talk-soul-mates-and-partners-in-crime) | Spring Boot vs Quarkus, GraalVM native, framework comparison |
-| 11 | [Exploring Spring Boot Clients](https://github.com/patbaumgartner/talk-exploring-spring-boot-clients) | HTTP clients, interface clients, REST, database connectors |
-| 12 | [Insights From a Spring Boot Leisure Project](https://github.com/patbaumgartner/talk-insights-from-a-spring-boot-leisure-project) | Buildpacks, GitHub Actions, Docker, GraphQL, API design |
-| 13 | [Lean Spring Boot Applications for the Cloud](https://github.com/patbaumgartner/talk-lean-spring-boot-applications-for-the-cloud) | Spring AOT, startup time, memory footprint, observability |
-| 14 | [Spring Boot 3.0 is Coming!](https://github.com/patbaumgartner/talk-spring-boot-3.0-is-coming) | Java 17, Jakarta EE, GraalVM native images, Spring Boot Migrator |
+| 1 | [Stop Prompting, Start Planning — Reliable Agentic AI with Embabel](https://github.com/patbaumgartner/talk-stop-prompting-start-planning-with-embabel) | Goal-Oriented Action Planning (GOAP) for controllable, explainable, testable enterprise agents in Java & Spring |
+| 2 | [From Chaos to Cohesion: Building Modular Monoliths in the Real World](https://github.com/patbaumgartner/talk-building-modular-monoliths-in-the-real-world) | Incremental Spring Modulith adoption in existing codebases — finding boundaries, introducing modules, and keeping structure clear |
+| 3 | [Buildpacks Unpacked: Hacking Spring Boot Builds with Custom AOT Caching](https://github.com/patbaumgartner/talk-buildpacks-unpacked-custom-aot-caching) | Extend the Paketo buildpack pipeline with a custom AOT class-loading cache and benchmark the startup impact |
+| 4 | [Spring Boot Observability in Practice](https://github.com/patbaumgartner/talk-spring-boot-observability-in-practice) | Actuator endpoints, Micrometer metrics to Prometheus, Grafana dashboards, and distributed tracing with OpenTelemetry — from local dev to Kubernetes |
+| 5 | [Spring Boot in the Cloud: Advanced Optimization Deep Dive](https://github.com/patbaumgartner/deep-dive-spring-boot-in-the-cloud) | 3-hour hands-on workshop: memory reduction, startup time, Spring AOT, classpath exclusions, lazy beans, actuator, and JVM tuning |
+| 6 | [Green Coding with Spring Boot: Sustainability as a Path to Better Software](https://github.com/patbaumgartner/talk-green-coding-with-spring-boot) | Resource-efficient Spring Boot through architectural principles, data structures, and cloud optimization |
+| 7 | [Demystifying Spring Boot Magic](https://github.com/patbaumgartner/talk-demystifying-spring-boot-magic) | Deep dive into auto-configuration: AutoConfiguration.imports, @AutoConfiguration, @Conditional, and how to write your own Spring Boot starter |
+| 8 | [Understanding Buildpacks: Deep Dive into Cloud Native Buildpacks](https://github.com/patbaumgartner/talk-understanding-buildpacks) | Lifecycle internals, the Paketo project, rebasing, reproducibility, and real-world CI/CD integration with Spring Boot |
+| 9 | [Intelligent Applications with Spring AI](https://github.com/patbaumgartner/talk-intelligent-applications-with-spring-ai) | Practical integration of LLMs, chat interaction, image generation, and audio transcription in enterprise applications using Spring AI |
+| 10 | [Soul Mates and Partners in Crime — What Quarkus and Spring Boot Can Learn from Each Other](https://github.com/patbaumgartner/talk-soul-mates-and-partners-in-crime) | GraalVM-native capabilities, startup efficiency, and cross-pollination of ideas between frameworks |
+| 11 | [Exploring Spring Boot Clients](https://github.com/patbaumgartner/talk-exploring-spring-boot-clients) | Templates, Interface Clients, and client abstractions for connecting to databases, REST APIs, and external services in enterprise applications |
+| 12 | [Insights From a Spring Boot Leisure Project](https://github.com/patbaumgartner/talk-insights-from-a-spring-boot-leisure-project) | A developer story in three acts: Android, Spring Boot, Buildpacks, GitHub Actions, Docker, GraphQL, and API breaking changes |
+| 13 | [Lean Spring Boot Applications for the Cloud](https://github.com/patbaumgartner/talk-lean-spring-boot-applications-for-the-cloud) | Optimize startup time and memory footprint with Spring AOT, classpath exclusions, lazy beans, custom JVM options, and observability |
+| 14 | [Spring Boot 3.0 is Coming](https://github.com/patbaumgartner/talk-spring-boot-3.0-is-coming) | Java 17 baseline, Jakarta EE migration, GraalVM native images, and Spring Boot Migrator |
 <!-- TALKS_END -->
 
 ---
