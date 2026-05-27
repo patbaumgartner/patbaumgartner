@@ -1,0 +1,192 @@
+name: Update Talks
+
+on:
+  # Schedule daily updates (offset from metrics workflow at 00:00)
+  schedule: [{cron: "0 1 * * *"}]
+  # (optional) Run workflow manually
+  workflow_dispatch:
+
+jobs:
+  update-talks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch repos and regenerate talks table
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 << 'EOF'
+          import json, re, os, urllib.request
+
+          token = os.environ.get('GH_TOKEN', '')
+          headers = {
+              'Accept': 'application/vnd.github.v3+json',
+              'User-Agent': 'github-actions',
+          }
+          if token:
+              headers['Authorization'] = f'token {token}'
+
+          # Fetch all repos, sorted by creation date ascending
+          repos = []
+          page = 1
+          while True:
+              url = (
+                  f'https://api.github.com/users/patbaumgartner/repos'
+                  f'?per_page=100&sort=created&direction=asc&page={page}'
+              )
+              req = urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(req) as resp:
+                  data = json.loads(resp.read())
+              if not data:
+                  break
+              repos.extend(data)
+              if len(data) < 100:
+                  break
+              page += 1
+
+          # Keep only talk-* and deep-dive-* repos
+          talks = [r for r in repos if r['name'].startswith(('talk-', 'deep-dive-'))]
+
+          def parse_description(desc, name):
+              """Return (display_title, key_topics) from a repo description."""
+              if not desc:
+                  title = (
+                      name.replace('talk-', '')
+                          .replace('deep-dive-', '')
+                          .replace('-', ' ')
+                          .title()
+                  )
+                  return title, ''
+              # Split on the first '. ' or '! ' to separate title from body
+              for sep in ['! ', '. ']:
+                  idx = desc.find(sep)
+                  if idx != -1:
+                      title = desc[:idx]
+                      rest = desc[idx + len(sep):]
+                      # First sentence of remainder becomes the topics hint
+                      for end in ['. ', '! ', '? ']:
+                          end_idx = rest.find(end)
+                          if end_idx != -1:
+                              topics = rest[:end_idx]
+                              break
+                      else:
+                          topics = rest.rstrip('.')
+                      return title, topics
+              return desc, ''
+
+          rows = [
+              '| # | Talk / Deep Dive | Key Topics |',
+              '|---|-----------------|------------|',
+          ]
+          for i, r in enumerate(talks, 1):
+              title, topics = parse_description(r.get('description') or '', r['name'])
+              url = r['html_url']
+              rows.append(f'| {i} | [{title}]({url}) | {topics} |')
+
+          table = '\n'.join(rows)
+
+          with open('README.md', 'r', encoding='utf-8') as f:
+              content = f.read()
+
+          new_content = re.sub(
+              r'<!-- TALKS_START -->.*?<!-- TALKS_END -->',
+              f'<!-- TALKS_START -->\n{table}\n<!-- TALKS_END -->',
+              content,
+              flags=re.DOTALL,
+          )
+
+          if new_content == content:
+              print('No changes detected.')
+          else:
+              with open('README.md', 'w', encoding='utf-8') as f:
+                  f.write(new_content)
+              print('README.md updated.')
+          EOF
+
+      - name: Sync GitHub topics on talk and deep-dive repos
+        env:
+          GH_TOKEN: ${{ secrets.METRICS_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import json, os, urllib.request
+
+          token = os.environ.get('GH_TOKEN', '')
+          headers = {
+              'Accept': 'application/vnd.github.v3+json',
+              'User-Agent': 'github-actions',
+              'Content-Type': 'application/json',
+          }
+          if token:
+              headers['Authorization'] = f'token {token}'
+
+          # Rules: (substring-in-name → extra topics to add)
+          EXTRA = [
+              ('spring-ai',     {'spring-ai', 'llm'}),
+              ('intelligent',   {'spring-ai', 'llm'}),
+              ('embabel',       {'agentic-ai', 'embabel'}),
+              ('buildpacks',    {'buildpacks', 'cloud-native', 'paketo'}),
+              ('observabilit',  {'observability', 'opentelemetry', 'micrometer'}),
+              ('quarkus',       {'quarkus', 'graalvm'}),
+              ('graalvm',       {'graalvm', 'native-image'}),
+              ('modulith',      {'spring-modulith', 'modular-monolith'}),
+              ('green',         {'green-software', 'sustainability'}),
+              ('aot',           {'spring-aot', 'graalvm'}),
+              ('lean',          {'performance', 'cloud-native'}),
+              ('cloud',         {'cloud-native'}),
+          ]
+
+          def compute_topics(name):
+              topics = {'java', 'spring-boot'}
+              if name.startswith('talk-'):
+                  topics.add('conference-talk')
+              if name.startswith('deep-dive-'):
+                  topics.update({'deep-dive', 'workshop'})
+              for keyword, extra in EXTRA:
+                  if keyword in name:
+                      topics.update(extra)
+              return sorted(topics)
+
+          # Fetch all repos
+          repos, page = [], 1
+          while True:
+              url = (
+                  f'https://api.github.com/users/patbaumgartner/repos'
+                  f'?per_page=100&sort=created&direction=asc&page={page}'
+              )
+              req = urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(req) as resp:
+                  data = json.loads(resp.read())
+              if not data:
+                  break
+              repos.extend(data)
+              if len(data) < 100:
+                  break
+              page += 1
+
+          talks = [r for r in repos if r['name'].startswith(('talk-', 'deep-dive-'))]
+
+          for r in talks:
+              name = r['name']
+              topics = compute_topics(name)
+              payload = json.dumps({'names': topics}).encode()
+              url = f'https://api.github.com/repos/patbaumgartner/{name}/topics'
+              req = urllib.request.Request(url, data=payload, headers=headers, method='PUT')
+              try:
+                  with urllib.request.urlopen(req) as resp:
+                      print(f'  {name}: {topics}')
+              except Exception as e:
+                  print(f'  WARN {name}: {e}')
+          EOF
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet README.md \
+            && echo "Nothing to commit." \
+            || (git add README.md \
+                && git commit -m "chore: update talks list [skip ci]" \
+                && git push)
