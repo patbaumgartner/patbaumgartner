@@ -22,7 +22,7 @@ Driven by **curiosity, continuous improvement, and problem-solving**, I believe 
 
 ## 🎙️ Talks & Deep Dives
 
-If you attended one of my talks or workshops, you can find the code below — most recent first:
+If you attended one of my talks or workshops, you can find the code below — most recent first, or 👉 [browse all repositories](https://github.com/patbaumgartner?tab=repositories&q=talk+OR+deep-dive&sort=created&direction=desc):
 
 <!-- TALKS_START -->
 | # | Talk / Deep Dive | Key Topics |
