@@ -41,8 +41,8 @@ If you attended one of my talks or workshops, you can find the code below — mo
 | 12 | [Exploring Spring Boot Clients](https://github.com/patbaumgartner/talk-exploring-spring-boot-clients) | Templates, Interface Clients, and client abstractions for connecting to databases, REST APIs, and external services in enterprise applications | W-JAX 2024 |
 | 13 | [Spring Boot 3.0 is Coming](https://github.com/patbaumgartner/talk-spring-boot-3.0-is-coming) | Java 17 baseline, Jakarta EE migration, GraalVM native images, and Spring Boot Migrator | entwickler.de Live-Event 2023 |
 | 14 | [Demystifying Spring Boot Magic](https://github.com/patbaumgartner/talk-demystifying-spring-boot-magic) | Deep dive into auto-configuration: AutoConfiguration.imports, @AutoConfiguration, @Conditional, and how to write your own Spring Boot starter | W-JAX 2022 |
-| 15 | [Chaos Engineering with Spring Boot - Talk repository](https://github.com/patbaumgartner/talk-chaos-engineering-with-springboot) |  |  |
-| 16 | [Application Architecture Patterns - Talk repository](https://github.com/patbaumgartner/talk-application-architecture-patterns) |  |  |
+| 15 | [Chaos Engineering with Spring Boot](https://github.com/patbaumgartner/talk-chaos-engineering-with-springboot) | Embrace failure as a feature using Chaos Monkey for Spring Boot — resilience testing, chaos principles, and attack scenarios in microservice architectures |  |
+| 16 | [Application Architecture Patterns](https://github.com/patbaumgartner/talk-application-architecture-patterns) | Microservice, self-contained system, and modulithic architectures — trade-offs, patterns, Conway's Law, DDD, and practical frameworks for building better applications |  |
 <!-- TALKS_END -->
 
 ---
