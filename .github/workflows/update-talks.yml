@@ -78,6 +78,7 @@ jobs:
           # ── Conference extraction from commit messages ──────────────────────
           _PREFIX = re.compile(
               r'^(?:update(?:d|s)?(?:\s+slides?)?'
+              r'|add\s+slides?'                    # 'Add slides for JAX 2026'
               r'|initial\s+(?:commit|version|release)'
               r'|first\s+(?:version|commit)'
               r'|adjusted|prepared)\s+(?:for\s+)?',
@@ -88,8 +89,9 @@ jobs:
           )
           _SKIP = re.compile(
               r'^(?:initial\s+commit[\s\W]*$'        # bare 'Initial commit' (no conference)
-              r'|add\s+|chore:|fix:|feat:|merge\s+'
-              r'|update\s+readme|update\s+github|add\s+profile|bump\s+'
+              r'|add\s+(?!slides?\s)'               # skip 'add X' but NOT 'add slides for Y'
+              r'|chore:|fix:|feat:|merge\s+'
+              r'|update\s+readme|update\s+github|bump\s+'
               r'|renamed?\s+|removed?\s+|deleted?\s+|created?\s+file)',
               re.IGNORECASE,
           )
@@ -126,14 +128,20 @@ jobs:
                   return []
               seen = {}
               for c in commits:
-                  conf = extract_conference(c['commit']['message'])
-                  if conf:
-                      # Deduplicate by (normalised name, year) — same conf+year wins once
-                      m_yr = re.search(r'(20\d{2})', conf)
-                      year_part = m_yr.group(1) if m_yr else ''
-                      name_part = re.sub(r'\s+', '', conf).lower()
-                      key = f'{name_part}_{year_part}'
-                      seen.setdefault(key, conf)
+                  conf_raw = extract_conference(c['commit']['message'])
+                  if conf_raw:
+                      # Split 'Conf A 2022 and Conf B 2022' into separate entries
+                      parts = re.split(r'\s+and\s+', conf_raw, flags=re.IGNORECASE)
+                      for conf in parts:
+                          conf = conf.strip()
+                          if not conf or not re.search(r'20\d{2}', conf):
+                              continue
+                          # Deduplicate by (normalised name, year)
+                          m_yr = re.search(r'(20\d{2})', conf)
+                          year_part = m_yr.group(1) if m_yr else ''
+                          name_part = re.sub(r'\s+', '', conf).lower()
+                          key = f'{name_part}_{year_part}'
+                          seen.setdefault(key, conf)
               # Sort by year, then alphabetically within the same year
               def _year(s):
                   m = re.search(r'20(\d{2})', s)
