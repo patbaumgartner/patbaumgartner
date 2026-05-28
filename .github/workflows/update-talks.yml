@@ -78,16 +78,19 @@ jobs:
           # ── Conference extraction from commit messages ──────────────────────
           _PREFIX = re.compile(
               r'^(?:update(?:d|s)?(?:\s+slides?)?'
-              r'|initial\s+(?:commit|version)'
-              r'|first\s+version|adjusted)\s+(?:for\s+)?',
+              r'|initial\s+(?:commit|version|release)'
+              r'|first\s+(?:version|commit)'
+              r'|adjusted|prepared)\s+(?:for\s+)?',
               re.IGNORECASE,
           )
           _SUFFIX = re.compile(
               r'\s+(?:updates?|edition|version|release)\s*$', re.IGNORECASE
           )
           _SKIP = re.compile(
-              r'^(?:initial\s+commit$|add\s+|chore:|fix:|feat:|merge\s+'
-              r'|update\s+readme|update\s+github|add\s+profile|bump\s+)',
+              r'^(?:initial\s+commit[\s\W]*$'        # bare 'Initial commit' (no conference)
+              r'|add\s+|chore:|fix:|feat:|merge\s+'
+              r'|update\s+readme|update\s+github|add\s+profile|bump\s+'
+              r'|renamed?\s+|removed?\s+|deleted?\s+|created?\s+file)',
               re.IGNORECASE,
           )
 
@@ -125,24 +128,42 @@ jobs:
               for c in commits:
                   conf = extract_conference(c['commit']['message'])
                   if conf:
-                      key = re.sub(r'\s+', '', conf).lower()
+                      # Deduplicate by (normalised name, year) — same conf+year wins once
+                      m_yr = re.search(r'(20\d{2})', conf)
+                      year_part = m_yr.group(1) if m_yr else ''
+                      name_part = re.sub(r'\s+', '', conf).lower()
+                      key = f'{name_part}_{year_part}'
                       seen.setdefault(key, conf)
-              # Sort by year, then alphabetically
+              # Sort by year, then alphabetically within the same year
               def _year(s):
                   m = re.search(r'20(\d{2})', s)
                   return int(m.group(1)) if m else 0
-              return sorted(seen.values(), key=_year)
+              return sorted(seen.values(), key=lambda s: (_year(s), s.lower()))
 
           # ── Build table ─────────────────────────────────────────────────────
           rows = [
               '| # | Talk / Deep Dive | Key Topics | Presented at |',
               '|---|-----------------|------------|--------------|',
           ]
-          for i, r in enumerate(talks, 1):
+          # Collect all data first so we can sort before numbering
+          talk_rows = []
+          for r in talks:
               title, topics = parse_description(r.get('description') or '', r['name'])
               url = r['html_url']
               conferences = get_conferences(r['name'])
               conf_str = ', '.join(conferences)
+              # Max year the talk was last delivered (0 if never delivered)
+              def _max_year(confs):
+                  years = [int(m.group(1)) for c in confs
+                           for m in [re.search(r'(20\d{2})', c)] if m]
+                  return max(years) if years else 0
+              last_year = _max_year(conferences)
+              talk_rows.append((last_year, len(conferences), title, url, topics, conf_str))
+
+          # Sort: most-recent year first, then most deliveries first
+          talk_rows.sort(key=lambda t: (t[0], t[1]), reverse=True)
+
+          for i, (_, _, title, url, topics, conf_str) in enumerate(talk_rows, 1):
               rows.append(f'| {i} | [{title}]({url}) | {topics} | {conf_str} |')
 
           table = '\n'.join(rows)
