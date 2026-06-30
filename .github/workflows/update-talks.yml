@@ -19,7 +19,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 << 'EOF'
-          import json, re, os, urllib.request
+          import json, re, os, time, urllib.request, urllib.error
 
           token = os.environ.get('GH_TOKEN', '')
           headers = {
@@ -29,6 +29,37 @@ jobs:
           if token:
               headers['Authorization'] = f'token {token}'
 
+          # Retry transient errors (429/5xx/network). On 401 the token is bad,
+          # so fall back to an anonymous request (public data needs no auth).
+          _RETRY_STATUS = {429, 500, 502, 503, 504}
+
+          def fetch_json(url, *, data=None, method=None, retries=4):
+              auth = dict(headers)
+              for attempt in range(retries):
+                  req = urllib.request.Request(url, data=data, headers=auth, method=method)
+                  try:
+                      with urllib.request.urlopen(req, timeout=30) as resp:
+                          body = resp.read()
+                          return json.loads(body) if body else None
+                  except urllib.error.HTTPError as e:
+                      if e.code == 401 and 'Authorization' in auth:
+                          print('  WARN 401 Unauthorized; retrying anonymously.')
+                          auth.pop('Authorization', None)
+                          continue
+                      if e.code in _RETRY_STATUS and attempt < retries - 1:
+                          wait = 2 ** attempt
+                          print(f'  WARN HTTP {e.code}; retry in {wait}s')
+                          time.sleep(wait)
+                          continue
+                      raise
+                  except urllib.error.URLError as e:
+                      if attempt < retries - 1:
+                          wait = 2 ** attempt
+                          print(f'  WARN {e}; retry in {wait}s')
+                          time.sleep(wait)
+                          continue
+                      raise
+
           # Fetch all repos, sorted by creation date descending
           repos = []
           page = 1
@@ -37,9 +68,7 @@ jobs:
                   f'https://api.github.com/users/patbaumgartner/repos'
                   f'?per_page=100&sort=created&direction=desc&page={page}'
               )
-              req = urllib.request.Request(url, headers=headers)
-              with urllib.request.urlopen(req) as resp:
-                  data = json.loads(resp.read())
+              data = fetch_json(url)
               if not data:
                   break
               repos.extend(data)
@@ -120,9 +149,7 @@ jobs:
                   f'{repo_name}/commits?per_page=50'
               )
               try:
-                  req = urllib.request.Request(url, headers=headers)
-                  with urllib.request.urlopen(req) as resp:
-                      commits = json.loads(resp.read())
+                  commits = fetch_json(url) or []
               except Exception as e:
                   print(f'  WARN {repo_name} commits: {e}')
                   return []
@@ -202,7 +229,7 @@ jobs:
           GH_TOKEN: ${{ secrets.TOPICS_TOKEN }}
         run: |
           python3 << 'EOF'
-          import json, os, urllib.request
+          import json, os, time, urllib.request, urllib.error
 
           token = os.environ.get('GH_TOKEN', '')
           headers = {
@@ -212,6 +239,31 @@ jobs:
           }
           if token:
               headers['Authorization'] = f'token {token}'
+
+          # Retry transient errors (429/5xx/network) with exponential backoff.
+          _RETRY_STATUS = {429, 500, 502, 503, 504}
+
+          def fetch_json(url, *, data=None, method=None, retries=4):
+              for attempt in range(retries):
+                  req = urllib.request.Request(url, data=data, headers=headers, method=method)
+                  try:
+                      with urllib.request.urlopen(req, timeout=30) as resp:
+                          body = resp.read()
+                          return json.loads(body) if body else None
+                  except urllib.error.HTTPError as e:
+                      if e.code in _RETRY_STATUS and attempt < retries - 1:
+                          wait = 2 ** attempt
+                          print(f'  WARN HTTP {e.code}; retry in {wait}s')
+                          time.sleep(wait)
+                          continue
+                      raise
+                  except urllib.error.URLError as e:
+                      if attempt < retries - 1:
+                          wait = 2 ** attempt
+                          print(f'  WARN {e}; retry in {wait}s')
+                          time.sleep(wait)
+                          continue
+                      raise
 
           # Rules: (substring-in-name → extra topics to add)
           EXTRA = [
@@ -247,9 +299,7 @@ jobs:
                   f'https://api.github.com/users/patbaumgartner/repos'
                   f'?per_page=100&sort=created&direction=desc&page={page}'
               )
-              req = urllib.request.Request(url, headers=headers)
-              with urllib.request.urlopen(req) as resp:
-                  data = json.loads(resp.read())
+              data = fetch_json(url)
               if not data:
                   break
               repos.extend(data)
@@ -264,10 +314,9 @@ jobs:
               topics = compute_topics(name)
               payload = json.dumps({'names': topics}).encode()
               url = f'https://api.github.com/repos/patbaumgartner/{name}/topics'
-              req = urllib.request.Request(url, data=payload, headers=headers, method='PUT')
               try:
-                  with urllib.request.urlopen(req) as resp:
-                      print(f'  {name}: {topics}')
+                  fetch_json(url, data=payload, method='PUT')
+                  print(f'  {name}: {topics}')
               except Exception as e:
                   print(f'  WARN {name}: {e}')
           EOF
