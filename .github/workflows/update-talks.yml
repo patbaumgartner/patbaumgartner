@@ -241,16 +241,24 @@ jobs:
               headers['Authorization'] = f'token {token}'
 
           # Retry transient errors (429/5xx/network) with exponential backoff.
+          # On 401 the token is bad/expired, so fall back to an anonymous request:
+          # listing public repos needs no auth, and topic writes then degrade to a
+          # per-repo WARN instead of aborting the whole job.
           _RETRY_STATUS = {429, 500, 502, 503, 504}
 
           def fetch_json(url, *, data=None, method=None, retries=4):
+              auth = dict(headers)
               for attempt in range(retries):
-                  req = urllib.request.Request(url, data=data, headers=headers, method=method)
+                  req = urllib.request.Request(url, data=data, headers=auth, method=method)
                   try:
                       with urllib.request.urlopen(req, timeout=30) as resp:
                           body = resp.read()
                           return json.loads(body) if body else None
                   except urllib.error.HTTPError as e:
+                      if e.code == 401 and 'Authorization' in auth:
+                          print('  WARN 401 Unauthorized; retrying anonymously.')
+                          auth.pop('Authorization', None)
+                          continue
                       if e.code in _RETRY_STATUS and attempt < retries - 1:
                           wait = 2 ** attempt
                           print(f'  WARN HTTP {e.code}; retry in {wait}s')
