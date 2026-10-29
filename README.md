@@ -43,6 +43,7 @@ If you attended one of my talks or workshops, you can find the code below — mo
 | 14 | [Spring Boot 3.0 is Coming](https://github.com/patbaumgartner/talk-spring-boot-3.0-is-coming) | Java 17 baseline, Jakarta EE migration, GraalVM native images, and Spring Boot Migrator | entwickler.de Live-Event 2023 |
 | 15 | [Chaos Engineering with Spring Boot](https://github.com/patbaumgartner/talk-chaos-engineering-with-springboot) | Embrace failure as a feature using Chaos Monkey for Spring Boot — resilience testing, chaos principles, and attack scenarios in microservice architectures | JCON.ONE 2022, W-JAX 2022 |
 | 16 | [Application Architecture Patterns](https://github.com/patbaumgartner/talk-application-architecture-patterns) | Microservice, self-contained system, and modulithic architectures — trade-offs, patterns, Conway's Law, DDD, and practical frameworks for building better applications | Noser Kickoff 2021 |
+| 17 | [Agentic Patterns With Spring Ai](https://github.com/patbaumgartner/talk-agentic-patterns-with-spring-ai) |  |  |
 <!-- TALKS_END -->
 
 ---
